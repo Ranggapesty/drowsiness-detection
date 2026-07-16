@@ -143,12 +143,3 @@ Aplikasi dapat diakses secara live atau dijalankan secara lokal.
 | EDA Notebook | [01_eda.ipynb](tahap_1_EDA/01_eda.ipynb) |
 | Modeling Notebook | [02_modeling.ipynb](tahap_4_Modeling/02_modeling.ipynb) |
 
-### Catatan Deployment
-
-- Model di-host via Hugging Face → didownload otomatis saat Streamlit app dijalankan
-- Aplikasi menggunakan **PIL** (bukan OpenCV) untuk kompatibilitas Streamlit Cloud
-- Tidak ada file `.npy` atau `.h5` di git — semuanya di-load dari HuggingFace atau local
-
-## 📄 License
-
-Academic project — Universitas (UAS Deep Learning)
