@@ -1,7 +1,7 @@
 import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
-from utils import (load_model, load_tuned_model, load_keras_model, preprocess_image_pil,
+from utils import (load_model, load_tuned_model, preprocess_image_pil,
                    predict_model, make_gradcam_heatmap, find_last_conv_layer, preprocess_input, CLASSES, IMG_SIZE)
 
 def main():
@@ -16,8 +16,7 @@ def main():
         st.warning("Model not found — cannot run inference.")
         return
 
-    keras_model = load_keras_model("mobilenetv2_best.h5") if use_gradcam else None
-    base_model, last_conv = find_last_conv_layer(keras_model)
+    base_model, last_conv = find_last_conv_layer(model) if use_gradcam else (None, None)
 
     uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 
@@ -55,11 +54,11 @@ def main():
         st.pyplot(fig)
 
         if use_gradcam:
-            if keras_model is None or base_model is None:
+            if base_model is None or last_conv is None:
                 st.info("Grad-CAM requires TensorFlow installed locally — unavailable on Streamlit Cloud.")
             else:
                 st.subheader("Grad-CAM Heatmap")
-                heatmap = make_gradcam_heatmap(img_proc, keras_model, base_model, last_conv, int(pred_class))
+                heatmap = make_gradcam_heatmap(img_proc, model, base_model, last_conv, int(pred_class))
                 import tensorflow as tf
                 heatmap_resized = tf.image.resize(
                     heatmap[..., tf.newaxis], (IMG_SIZE, IMG_SIZE)

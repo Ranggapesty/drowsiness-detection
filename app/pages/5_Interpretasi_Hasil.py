@@ -8,7 +8,7 @@ import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-from utils import (load_model, load_keras_model, load_data, preprocess_input, find_last_conv_layer,
+from utils import (load_model, load_data, preprocess_input, find_last_conv_layer,
                    predict_model, make_gradcam_heatmap, CLASSES, IMG_SIZE, EVAL_DIR)
 
 def main():
@@ -20,8 +20,7 @@ def main():
         st.warning("Model not found — cannot run inference.")
         return
 
-    keras_model = load_keras_model("mobilenetv2_best.h5")
-    base_model, conv_name = find_last_conv_layer(keras_model)
+    base_model, conv_name = find_last_conv_layer(model)
 
     tab1, tab2, tab3, tab4 = st.tabs([
         "Grad-CAM Visualization", "Model Analysis",
@@ -40,7 +39,7 @@ def main():
 
         if not has_local_data:
             st.info("Grad-CAM requires TensorFlow + dataset files available locally.")
-        elif keras_model is None or base_model is None:
+        elif base_model is None or conv_name is None:
             st.info("Grad-CAM requires TensorFlow installed locally — unavailable on Streamlit Cloud.")
         else:
             X_train, y_train, X_val, y_val, X_test, y_test = data
@@ -61,7 +60,7 @@ def main():
                         pred_class = np.argmax(preds[0])
                         conf = np.max(preds[0])
                         heatmap = make_gradcam_heatmap(
-                            img_proc, keras_model, base_model, conv_name
+                            img_proc, model, base_model, conv_name
                         )
                         import tensorflow as tf
                         hr = tf.image.resize(heatmap[..., tf.newaxis],
