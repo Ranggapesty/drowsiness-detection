@@ -30,7 +30,7 @@ def main():
         st.subheader("Confusion Matrix")
         cm_path = os.path.join(EVAL_DIR, "confusion_matrix.png")
         if os.path.exists(cm_path):
-            st.image(cm_path, use_container_width=True)
+            st.image(cm_path, width='stretch')
         else:
             st.warning("Confusion matrix image not found. Run tahap_5_Evaluasi first.")
 
@@ -38,7 +38,7 @@ def main():
         st.subheader("ROC Curve")
         roc_path = os.path.join(EVAL_DIR, "roc_curve.png")
         if os.path.exists(roc_path):
-            st.image(roc_path, use_container_width=True)
+            st.image(roc_path, width='stretch')
         else:
             st.warning("ROC curve image not found. Run tahap_5_Evaluasi first.")
 
@@ -58,7 +58,7 @@ def main():
                           f"opt={best['optimizer']}, "
                           f"batch={int(best['batch_size'])}")
 
-                st.dataframe(df, use_container_width=True)
+                st.dataframe(df, width='stretch')
 
                 fig, axes = plt.subplots(1, 3, figsize=(15, 4))
                 fig.suptitle("Hyperparameter Tuning Results", fontweight="bold")
@@ -97,7 +97,7 @@ def main():
         st.subheader("Grad-CAM Visualization")
         gradcam_path = os.path.join(EVAL_DIR, "gradcam_grid.png")
         if os.path.exists(gradcam_path):
-            st.image(gradcam_path, use_container_width=True)
+            st.image(gradcam_path, width='stretch')
             st.caption("Grad-CAM heatmaps for each class. Red regions indicate areas the model focuses on.")
         else:
             st.warning("Grad-CAM image not found. Run 05b_GradCAM.py first.")

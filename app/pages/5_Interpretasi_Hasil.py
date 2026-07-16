@@ -82,7 +82,7 @@ def main():
 
         gradcam_path = os.path.join(EVAL_DIR, "gradcam_grid.png")
         if os.path.exists(gradcam_path):
-            st.image(gradcam_path, use_container_width=True)
+            st.image(gradcam_path, width='stretch')
 
     with tab2:
         st.subheader("Model Analysis")

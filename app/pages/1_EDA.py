@@ -42,7 +42,7 @@ def main():
         fig.add_trace(go.Bar(name=split, x=CLASSES, y=counts))
     fig.update_layout(barmode="group", yaxis_title="Count",
                       legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width='stretch')
 
     st.subheader("File Format Distribution")
     if stats and stats.get("format_distribution"):
@@ -51,7 +51,7 @@ def main():
                                      marker=dict(colors=["#FF9800", "#4CAF50"]),
                                      textinfo="label+percent", hole=0.4)])
         fig.update_layout(title=f"Total: {fmt['total']} images ({fmt['jpg']} JPG, {fmt['png']} PNG)")
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
     col_a, col_b = st.columns(2)
     with col_a:
         if stats and stats.get("resolution"):
@@ -76,7 +76,7 @@ def main():
                                          marker=dict(colors=["#4CAF50", "#FF9800", "#F44336"]),
                                          textinfo="label+value", hole=0.4)])
             fig.update_layout(title="Glasses Distribution (PNG metadata)")
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
 
     st.subheader("Sample Images per Class")
     st.markdown("**Insight:** Closed_Eyes/Open_Eyes are eye region crops; No_yawn/Yawn are mouth crops. "
@@ -84,7 +84,7 @@ def main():
     np.random.seed(42)
     fig, axes = plt.subplots(4, 5, figsize=(12, 8))
     for i, cls in enumerate(CLASSES):
-        idxs = np.where(y_train == i)[0]
+        idxs = np.flatnonzero(y_train == i)
         selected = np.random.choice(idxs, min(5, len(idxs)), replace=False)
         for j, idx in enumerate(selected):
             axes[i, j].imshow(X_train[idx])
@@ -106,7 +106,7 @@ def main():
     fig = px.sunburst(df, path=["Split", "Class"], values="Count", color="Count",
                       color_continuous_scale="Blues")
     fig.update_layout(title="Hierarchical Distribution: Split → Class")
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width='stretch')
 
     st.subheader("Key Insights")
     col_i1, col_i2, col_i3 = st.columns(3)
