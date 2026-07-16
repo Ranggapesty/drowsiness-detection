@@ -134,18 +134,12 @@ python tahap_4_Modeling/04_Modeling_Training.py
 
 ## Deployment
 
-Aplikasi Streamlit di-deploy di Streamlit Community Cloud:
-
-[**Live Demo**](https://drowsiness-detection.streamlit.app) (link placeholder)
-
-## Deployment
-
-Aplikasi dapat diakses di **[Streamlit Cloud (coming soon)]()** atau dijalankan secara lokal.
+Aplikasi dapat diakses secara live atau dijalankan secara lokal.
 
 | Komponen | Link |
 |----------|------|
+| Live Demo | [drowsiness-detection.streamlit.app](https://drowsiness-detection-gzskeknjxmnwfaor6sl4fd.streamlit.app/) |
 | Model (HuggingFace) | [Ranggapesty/drowsiness-models](https://huggingface.co/Ranggapesty/drowsiness-models) |
-| Demo Live (Streamlit) | *(add URL after deploy)* |
 | EDA Notebook | [01_eda.ipynb](tahap_1_EDA/01_eda.ipynb) |
 | Modeling Notebook | [02_modeling.ipynb](tahap_4_Modeling/02_modeling.ipynb) |
 
