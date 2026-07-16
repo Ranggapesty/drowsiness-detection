@@ -1,0 +1,111 @@
+{
+  "total_images": 11566,
+  "splits": {
+    "Train": {
+      "total": 8548,
+      "classes": {
+        "Closed_Eyes": {
+          "count": 2029,
+          "jpg": 596,
+          "png": 1433
+        },
+        "Open_Eyes": {
+          "count": 2204,
+          "jpg": 596,
+          "png": 1608
+        },
+        "No_yawn": {
+          "count": 2165,
+          "jpg": 2165,
+          "png": 0
+        },
+        "Yawn": {
+          "count": 2150,
+          "jpg": 2150,
+          "png": 0
+        }
+      }
+    },
+    "Val": {
+      "total": 1554,
+      "classes": {
+        "Closed_Eyes": {
+          "count": 336,
+          "jpg": 42,
+          "png": 294
+        },
+        "Open_Eyes": {
+          "count": 336,
+          "jpg": 63,
+          "png": 273
+        },
+        "No_yawn": {
+          "count": 455,
+          "jpg": 455,
+          "png": 0
+        },
+        "Yawn": {
+          "count": 427,
+          "jpg": 427,
+          "png": 0
+        }
+      }
+    },
+    "Test": {
+      "total": 1464,
+      "classes": {
+        "Closed_Eyes": {
+          "count": 361,
+          "jpg": 88,
+          "png": 273
+        },
+        "Open_Eyes": {
+          "count": 186,
+          "jpg": 67,
+          "png": 119
+        },
+        "No_yawn": {
+          "count": 469,
+          "jpg": 469,
+          "png": 0
+        },
+        "Yawn": {
+          "count": 448,
+          "jpg": 448,
+          "png": 0
+        }
+      }
+    }
+  },
+  "format_distribution": {
+    "jpg": 7566,
+    "png": 4000,
+    "total": 11566
+  },
+  "png_metadata": {
+    "subjects": {},
+    "glasses": {},
+    "blur": {},
+    "illumination": {}
+  },
+  "resolution": {
+    "min_width": 28,
+    "min_height": 21,
+    "max_width": 146,
+    "max_height": 138,
+    "mean_width": 85.0,
+    "mean_height": 72.4
+  },
+  "preprocessing": {
+    "target_size": 64,
+    "normalization": "[0, 255] -> [0.0, 1.0]",
+    "color_mode": "RGB",
+    "resize_method": "letterbox padding (long edge = 64)",
+    "classes": [
+      "Closed_Eyes",
+      "Open_Eyes",
+      "No_yawn",
+      "Yawn"
+    ]
+  }
+}

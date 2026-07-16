@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# Environment
+.venv/
+env/
+venv/
+.vscode/
+.idea/
+
+# Data (download from Kaggle link in README)
+Data/
+tahap_2_Preprocessing/processed/
+
+# Models (too large — hosted on HuggingFace)
+models/*.h5
+app/model_cache/
+
+# Streaming cache
+.streamlit/
+
+# Logs / runtime
+*.log
+*.csv
+detection_log.csv
+
+# OS
+Thumbs.db
+.DS_Store

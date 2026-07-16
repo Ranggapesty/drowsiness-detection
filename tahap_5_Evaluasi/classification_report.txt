@@ -1,0 +1,14 @@
+CLASSIFICATION REPORT
+============================================================
+Test Accuracy: 0.9385 (93.85%)
+
+              precision    recall  f1-score   support
+
+ Closed_Eyes     0.9673    0.9003    0.9326       361
+   Open_Eyes     0.9055    0.9785    0.9406       186
+     No_yawn     0.9289    0.9467    0.9377       469
+        Yawn     0.9421    0.9442    0.9431       448
+
+    accuracy                         0.9385      1464
+   macro avg     0.9359    0.9424    0.9385      1464
+weighted avg     0.9394    0.9385    0.9385      1464
