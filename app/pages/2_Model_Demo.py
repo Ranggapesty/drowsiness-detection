@@ -1,17 +1,11 @@
-"""
-=========================================================
-Page 2: Model Demo — Live Inference
-=========================================================
-"""
-
 import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
-from utils import (load_model, load_tuned_model, preprocess_image_pil,
-                   make_gradcam_heatmap, find_last_conv_layer, preprocess_input, CLASSES, IMG_SIZE)
+from utils import (load_model, load_tuned_model, load_keras_model, preprocess_image_pil,
+                   predict_model, make_gradcam_heatmap, find_last_conv_layer, preprocess_input, CLASSES, IMG_SIZE)
 
 def main():
-    st.title("🧪 Model Demo")
+    st.title("Model Demo")
     st.markdown("Upload an eye/mouth image to test the drowsiness detection model.")
 
     model_source = st.radio("Select model:", ["MobileNetV2 (Baseline)", "MobileNetV2 (Tuned)"], horizontal=True)
@@ -19,10 +13,11 @@ def main():
 
     model = load_model() if model_source == "MobileNetV2 (Baseline)" else load_tuned_model()
     if model is None:
-        st.warning(f"Model not found: {'mobilenetv2_best.h5' if model_source == 'MobileNetV2 (Baseline)' else 'mobilenetv2_tuned.h5'}. Train the model first.")
+        st.warning("Model not found — cannot run inference.")
         return
 
-    base_model, last_conv = find_last_conv_layer(model)
+    keras_model = load_keras_model("mobilenetv2_best.h5") if use_gradcam else None
+    base_model, last_conv = find_last_conv_layer(keras_model)
 
     uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 
@@ -30,7 +25,7 @@ def main():
         img = preprocess_image_pil(uploaded_file)
         img_proc = preprocess_input(img[np.newaxis, ...] * 255.0)
 
-        preds = model.predict(img_proc, verbose=0)
+        preds = predict_model(model, img_proc)
         pred_class = np.argmax(preds[0])
         confidence = np.max(preds[0])
 
@@ -60,28 +55,31 @@ def main():
         st.pyplot(fig)
 
         if use_gradcam:
-            st.subheader("Grad-CAM Heatmap")
-            heatmap = make_gradcam_heatmap(img_proc, model, base_model, last_conv, int(pred_class))
-            import tensorflow as tf
-            heatmap_resized = tf.image.resize(
-                heatmap[..., tf.newaxis], (IMG_SIZE, IMG_SIZE)
-            ).numpy().squeeze()
-            heatmap_colored = plt.cm.jet(heatmap_resized)[:, :, :3]
-            overlay = 0.5 * img + 0.5 * heatmap_colored
-            overlay = np.clip(overlay, 0, 1)
+            if keras_model is None or base_model is None:
+                st.info("Grad-CAM requires TensorFlow installed locally — unavailable on Streamlit Cloud.")
+            else:
+                st.subheader("Grad-CAM Heatmap")
+                heatmap = make_gradcam_heatmap(img_proc, keras_model, base_model, last_conv, int(pred_class))
+                import tensorflow as tf
+                heatmap_resized = tf.image.resize(
+                    heatmap[..., tf.newaxis], (IMG_SIZE, IMG_SIZE)
+                ).numpy().squeeze()
+                heatmap_colored = plt.cm.jet(heatmap_resized)[:, :, :3]
+                overlay = 0.5 * img + 0.5 * heatmap_colored
+                overlay = np.clip(overlay, 0, 1)
 
-            fig, axes = plt.subplots(1, 3, figsize=(10, 3))
-            axes[0].imshow(img)
-            axes[0].set_title("Original")
-            axes[0].axis("off")
-            axes[1].imshow(heatmap_colored)
-            axes[1].set_title("Heatmap")
-            axes[1].axis("off")
-            axes[2].imshow(overlay)
-            axes[2].set_title("Overlay")
-            axes[2].axis("off")
-            plt.tight_layout()
-            st.pyplot(fig)
+                fig, axes = plt.subplots(1, 3, figsize=(10, 3))
+                axes[0].imshow(img)
+                axes[0].set_title("Original")
+                axes[0].axis("off")
+                axes[1].imshow(heatmap_colored)
+                axes[1].set_title("Heatmap")
+                axes[1].axis("off")
+                axes[2].imshow(overlay)
+                axes[2].set_title("Overlay")
+                axes[2].axis("off")
+                plt.tight_layout()
+                st.pyplot(fig)
 
         st.info(f"Model: {model_source} | Grad-CAM: {'On' if use_gradcam else 'Off'}")
 

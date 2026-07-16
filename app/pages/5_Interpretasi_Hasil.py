@@ -8,17 +8,20 @@ import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-from utils import (load_model, load_data, preprocess_input, find_last_conv_layer,
-                   make_gradcam_heatmap, CLASSES, IMG_SIZE, EVAL_DIR)
+from utils import (load_model, load_keras_model, load_data, preprocess_input, find_last_conv_layer,
+                   predict_model, make_gradcam_heatmap, CLASSES, IMG_SIZE, EVAL_DIR)
 
 def main():
-    st.title("🔍 Interpretasi Hasil")
+    st.title("Interpretasi Hasil")
     st.markdown("Model explanation, feature importance, and business insights.")
 
     model = load_model()
     if model is None:
-        st.warning("Model not found. Train the model first.")
+        st.warning("Model not found — cannot run inference.")
         return
+
+    keras_model = load_keras_model("mobilenetv2_best.h5")
+    base_model, conv_name = find_last_conv_layer(keras_model)
 
     tab1, tab2, tab3, tab4 = st.tabs([
         "Grad-CAM Visualization", "Model Analysis",
@@ -32,44 +35,51 @@ def main():
         paling memengaruhi keputusan model. Warna merah = pengaruh tinggi, biru = rendah.
         """)
 
-        X_train, y_train, X_val, y_val, X_test, y_test = load_data()
-        X_test_proc = preprocess_input(X_test * 255.0)
-        base_model, conv_name = find_last_conv_layer(model)
+        data = load_data()
+        has_local_data = data[0] is not None
 
-        if st.button("Generate Grad-CAM Samples", type="primary"):
-            np.random.seed(42)
-            fig, axes = plt.subplots(4, 3, figsize=(10, 12))
-            fig.suptitle("Grad-CAM Heatmaps per Class", fontweight="bold")
+        if not has_local_data:
+            st.info("Grad-CAM requires TensorFlow + dataset files available locally.")
+        elif keras_model is None or base_model is None:
+            st.info("Grad-CAM requires TensorFlow installed locally — unavailable on Streamlit Cloud.")
+        else:
+            X_train, y_train, X_val, y_val, X_test, y_test = data
+            X_test_proc = preprocess_input(X_test * 255.0)
 
-            for cls_idx, cls_name in enumerate(CLASSES):
-                idxs = np.where(y_test == cls_idx)[0]
-                selected = np.random.choice(idxs, 3, replace=False)
-                for col, idx in enumerate(selected):
-                    img = X_test[idx]
-                    img_proc = X_test_proc[idx:idx+1]
-                    preds = model.predict(img_proc, verbose=0)
-                    pred_class = np.argmax(preds[0])
-                    conf = np.max(preds[0])
-                    heatmap = make_gradcam_heatmap(
-                        img_proc, model, base_model, conv_name
-                    )
-                    import tensorflow as tf
-                    hr = tf.image.resize(heatmap[..., tf.newaxis],
-                                         (IMG_SIZE, IMG_SIZE)).numpy().squeeze()
-                    hc = plt.cm.jet(hr)[:, :, :3]
-                    overlay = np.clip(0.5 * img + 0.5 * hc, 0, 1)
-                    axes[cls_idx, col].imshow(overlay)
-                    color = "green" if pred_class == cls_idx else "red"
-                    axes[cls_idx, col].set_title(
-                        f"True:{cls_name[:6]} Pred:{CLASSES[pred_class][:6]} ({conf:.2f})",
-                        fontsize=7, color=color
-                    )
-                    axes[cls_idx, col].axis("off")
+            if st.button("Generate Grad-CAM Samples", type="primary"):
+                np.random.seed(42)
+                fig, axes = plt.subplots(4, 3, figsize=(10, 12))
+                fig.suptitle("Grad-CAM Heatmaps per Class", fontweight="bold")
 
-            plt.tight_layout()
-            st.pyplot(fig)
-            st.caption("Green title = correct prediction, Red = misclassification. "
-                      "Red overlay = high model attention.")
+                for cls_idx, cls_name in enumerate(CLASSES):
+                    idxs = np.where(y_test == cls_idx)[0]
+                    selected = np.random.choice(idxs, 3, replace=False)
+                    for col, idx in enumerate(selected):
+                        img = X_test[idx]
+                        img_proc = X_test_proc[idx:idx+1]
+                        preds = predict_model(model, img_proc)
+                        pred_class = np.argmax(preds[0])
+                        conf = np.max(preds[0])
+                        heatmap = make_gradcam_heatmap(
+                            img_proc, keras_model, base_model, conv_name
+                        )
+                        import tensorflow as tf
+                        hr = tf.image.resize(heatmap[..., tf.newaxis],
+                                             (IMG_SIZE, IMG_SIZE)).numpy().squeeze()
+                        hc = plt.cm.jet(hr)[:, :, :3]
+                        overlay = np.clip(0.5 * img + 0.5 * hc, 0, 1)
+                        axes[cls_idx, col].imshow(overlay)
+                        color = "green" if pred_class == cls_idx else "red"
+                        axes[cls_idx, col].set_title(
+                            f"True:{cls_name[:6]} Pred:{CLASSES[pred_class][:6]} ({conf:.2f})",
+                            fontsize=7, color=color
+                        )
+                        axes[cls_idx, col].axis("off")
+
+                plt.tight_layout()
+                st.pyplot(fig)
+                st.caption("Green title = correct prediction, Red = misclassification. "
+                          "Red overlay = high model attention.")
 
         gradcam_path = os.path.join(EVAL_DIR, "gradcam_grid.png")
         if os.path.exists(gradcam_path):
