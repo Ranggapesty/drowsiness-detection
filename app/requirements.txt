@@ -1,9 +1,6 @@
-tflite-runtime==2.15.0
+tflite-runtime>=2.15.0,<3.0.0
 streamlit>=1.28
-numpy==1.24.3
-pandas>=1.5
+numpy>=1.24,<2.0
 matplotlib>=3.7
 plotly>=5.18
 pillow>=10.0
-scikit-learn>=1.2
-protobuf==3.20.3
