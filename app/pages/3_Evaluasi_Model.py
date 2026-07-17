@@ -1,9 +1,3 @@
-"""
-=========================================================
-Page 3: Evaluasi Model
-=========================================================
-"""
-
 import streamlit as st
 import matplotlib.pyplot as plt
 import numpy as np
@@ -12,9 +6,54 @@ import os
 from utils import (EVAL_DIR, MODELING_DIR, load_classification_report,
                    load_tuning_results, CLASSES)
 
+MODEL_INFO = {
+    "CNN Custom": {
+        "arsitektur": "Conv2D → MaxPool ×2 → Flatten → Dense",
+        "params": "~2M trainable",
+        "val_acc": "21.62%",
+        "test_acc": "33.74%",
+        "f1": "0.2094",
+    },
+    "MobileNetV2 (Baseline)": {
+        "arsitektur": "Transfer Learning + GAP + Dense(128)",
+        "params": "2.3M frozen + 130K trainable",
+        "val_acc": "96.01%",
+        "test_acc": "93.85%",
+        "f1": "0.9385",
+    },
+    "MobileNetV2 (Tuned)": {
+        "arsitektur": "Transfer Learning + Dense(256, lr=0.0005)",
+        "params": "2.3M frozen + 260K trainable",
+        "val_acc": "96.78%",
+        "test_acc": "92.76%",
+        "f1": "0.9275",
+    },
+}
+
 def main():
-    st.title("📈 Evaluasi Model")
-    st.markdown("Baseline: MobileNetV2 | Accuracy: 93.85% | F1: 0.9385")
+    st.title("Evaluasi Model")
+    st.markdown("Perbandingan 3 model: CNN Custom vs MobileNetV2 (Baseline & Tuned).")
+
+    st.subheader("Perbandingan Model")
+    df = pd.DataFrame([
+        {
+            "Model": name,
+            "Arsitektur": info["arsitektur"],
+            "Parameters": info["params"],
+            "Val Acc": info["val_acc"],
+            "Test Acc": info["test_acc"],
+            "F1 (weighted)": info["f1"],
+        }
+        for name, info in MODEL_INFO.items()
+    ])
+    st.dataframe(df, width='stretch')
+
+    st.info(
+        "CNN Custom gagal karena dataset terbatas (~11.566 gambar). "
+        "Val_acc stuck di 21.6% (setara random 25%), tidak bisa membedakan kelas Closed_Eyes. "
+        "MobileNetV2 dengan pretrained ImageNet weights mencapai 93.85% — "
+        "membuktikan transfer learning wajib untuk dataset kecil."
+    )
 
     tab1, tab2, tab3, tab4 = st.tabs([
         "Classification Report", "Confusion Matrix",
@@ -22,7 +61,7 @@ def main():
     ])
 
     with tab1:
-        st.subheader("Classification Report")
+        st.subheader("Classification Report (MobileNetV2 Baseline)")
         report = load_classification_report()
         st.text(report)
 

@@ -1,7 +1,7 @@
 import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
-from utils import (load_model, load_tuned_model, preprocess_image_pil,
+from utils import (load_model, load_tuned_model, load_cnn_model, preprocess_image_pil,
                    predict_model, make_gradcam_heatmap, find_last_conv_layer,
                    preprocess_input, process_frame, alarm_html, is_drowsy,
                    CLASSES, IMG_SIZE)
@@ -10,15 +10,16 @@ def main():
     st.title("Model Demo")
     st.markdown("Upload an image or use your camera to test the drowsiness detection model.")
 
-    model_source = st.radio("Select model:", ["MobileNetV2 (Baseline)", "MobileNetV2 (Tuned)"], horizontal=True)
+    model_source = st.radio("Select model:", ["CNN Custom", "MobileNetV2 (Baseline)", "MobileNetV2 (Tuned)"], horizontal=True)
     use_gradcam = st.checkbox("Show Grad-CAM Heatmap", value=False)
 
-    model = load_model() if model_source == "MobileNetV2 (Baseline)" else load_tuned_model()
+    model_map = {"CNN Custom": load_cnn_model, "MobileNetV2 (Baseline)": load_model, "MobileNetV2 (Tuned)": load_tuned_model}
+    model = model_map[model_source]()
     if model is None:
         st.warning("Model not found — cannot run inference.")
         return
 
-    base_model, last_conv = find_last_conv_layer(model) if use_gradcam else (None, None)
+    base_model, last_conv = find_last_conv_layer(model) if (use_gradcam and model_source != "CNN Custom") else (None, None)
 
     input_mode = st.radio("Input method:", ["Upload Image", "Single Shot (Camera)", "Real-time (WebRTC)"], horizontal=True)
 
@@ -117,8 +118,7 @@ def _process_upload(uploaded_file, model, base_model, last_conv, use_gradcam, so
             plt.tight_layout()
             st.pyplot(fig)
 
-    st.info(f"Model: {'Baseline' if 'Baseline' in source_name else 'Tuned'}"
-            f" | Grad-CAM: {'On' if use_gradcam else 'Off'}"
+    st.info(f"Model: {source_name} | Grad-CAM: {'On' if use_gradcam else 'Off'}"
             f" | Drowsy: {'⚠️ Yes' if drowsy else '✅ No'}")
 
 if __name__ == "__main__":

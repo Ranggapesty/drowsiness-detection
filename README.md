@@ -43,6 +43,14 @@ Pipeline:
 
 ## Arsitektur
 
+### CNN Custom (from scratch)
+
+```
+Input (64x64x3) → Conv(32,3×3) → ReLU → MaxPool(2×2) → Conv(64,3×3) → ReLU → MaxPool(2×2) → Flatten → Dense(128,ReLU) → Dropout(0.5) → Dense(4,Softmax)
+```
+
+**Parameter:** ~2M trainable
+
 ### MobileNetV2 (Transfer Learning)
 
 ```
@@ -53,11 +61,16 @@ Input (64x64x3) → MobileNetV2 (frozen) → GAP → Dense(128,ReLU) → Dropout
 
 ## Hasil
 
-| Model | Best Val Acc | Test Acc | F1 (weighted) |
-|-------|-------------|----------|---------------|
-| CNN Custom | ~27% | — | — |
-| MobileNetV2 (Baseline) | **96.01%** | **93.85%** | **0.9385** |
-| MobileNetV2 (Tuned) | **96.78%** | — | — |
+| Model | Arsitektur | Val Acc | Test Acc | F1 (weighted) |
+|-------|-----------|:-------:|:--------:|:--------------:|
+| CNN Custom | Conv2D → MaxPool ×2 → Flatten → Dense | 21.62% | 33.74% | 0.2094 |
+| MobileNetV2 (Baseline) | Transfer Learning + GAP + Dense(128) | 96.01% | **93.85%** | **0.9385** |
+| MobileNetV2 (Tuned) | Transfer Learning + Dense(256, lr=0.0005) | **96.78%** | 92.76% | 0.9275 |
+
+> **Mengapa CNN Custom gagal?** Dataset hanya ~11.566 gambar — terlalu kecil untuk
+> training from scratch. CNN Custom overfit cepat (val_acc stuck di 21.6%, setara random).
+> MobileNetV2 dengan pretrained ImageNet weights langsung mencapai 93.85% —
+> membuktikan bahwa **transfer learning wajib** untuk dataset terbatas.
 
 **Hyperparameter Terbaik (RandomSearch):**
 - Learning rate: 0.0005

@@ -90,6 +90,17 @@ def load_tuned_model():
         return None
 
 
+def load_cnn_model():
+    try:
+        path = _download_model("cnn_custom_best.h5")
+        return keras.models.load_model(path)
+    except Exception:
+        local = os.path.join(MODELS_DIR, "cnn_custom_best.h5")
+        if os.path.exists(local):
+            return keras.models.load_model(local)
+        return None
+
+
 def load_dataset_stats():
     path = os.path.join(BASE_DIR, "assets", "dataset_stats.json")
     if not os.path.exists(path):
@@ -216,6 +227,8 @@ def process_frame(frame):
     if model is None:
         return frame
 
+    import cv2
+
     img = frame.to_ndarray(format="bgr24")
     h, w = img.shape[:2]
 
@@ -236,12 +249,9 @@ def process_frame(frame):
     label = f"{CLASSES[cls_idx]}: {conf:.2f}"
     drowsy = is_drowsy(cls_idx)
 
-    from PIL import ImageDraw
-    draw = ImageDraw.Draw(pil_img)
-    color = (255, 0, 0) if drowsy else (0, 255, 0)
-    draw.text((10, 30), label, fill=color)
+    color = (0, 0, 255) if drowsy else (0, 255, 0)
+    cv2.putText(img, label, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2)
     if drowsy:
-        draw.text((10, 70), "DROWSY!", fill=(255, 0, 0))
+        cv2.putText(img, "DROWSY!", (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 255), 3)
 
-    out = np.array(pil_img)[:, :, ::-1]
-    return av.VideoFrame.from_ndarray(out, format="bgr24")
+    return av.VideoFrame.from_ndarray(img, format="bgr24")

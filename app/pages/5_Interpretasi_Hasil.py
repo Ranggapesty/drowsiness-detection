@@ -89,10 +89,16 @@ def main():
         st.markdown("""
         ### Architecture Analysis
 
+        **CNN Custom (from scratch):**
+        - Conv2D(32) → MaxPool → Conv2D(64) → MaxPool → Flatten → Dense(128) → Dropout(0.5) → Dense(4)
+        - ~2M trainable parameters
+        - **Hasil: 33.74% test accuracy** — gagal karena dataset kecil (11.566 gambar)
+
         **MobileNetV2** menggunakan **Depthwise Separable Convolution** yang:
         - ✅ Jauh lebih ringan dari convolution standar (3.5M vs 7-14M parameters)
         - ✅ Memisahkan filtering spatial dari channel mixing
         - ✅ Cocok untuk deployment real-time di perangkat terbatas
+        - **Hasil: 93.85% test accuracy** dengan pretrained ImageNet weights
 
         ### Why Transfer Learning?
 
@@ -117,7 +123,19 @@ def main():
     with tab3:
         st.subheader("Error Analysis")
         st.markdown("""
-        ### Misclassification Patterns
+        ### Model Comparison
+
+        | Aspek | CNN Custom (33.74%) | MobileNetV2 (93.85%) |
+        |-------|:-------------------:|:--------------------:|
+        | Closed_Eyes recall | 0% | 89% |
+        | Open_Eyes recall | 1% | 98% |
+        | No_yawn recall | 11% | 92% |
+        | Yawn recall | 99% | 95% |
+
+        **CNN Custom** hampir selalu memprediksi "Yawn" untuk semua input — tidak belajar
+        membedakan kelas sama sekali. **MobileNetV2** mengenali ke-4 kelas dengan baik.
+
+        ### Misclassification Patterns (MobileNetV2)
 
         Based on the confusion matrix analysis:
 
