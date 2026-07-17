@@ -18,7 +18,8 @@ def main():
 
     base_model, last_conv = find_last_conv_layer(model) if use_gradcam else (None, None)
 
-    uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
+    input_method = st.radio("Input method:", ["Upload Image", "Camera"], horizontal=True)
+    uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"]) if input_method == "Upload Image" else st.camera_input("Take a photo...")
 
     if uploaded_file is not None:
         img = preprocess_image_pil(uploaded_file)
