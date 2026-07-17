@@ -1,5 +1,10 @@
 import os
 import json
+import struct
+import math
+import io
+import wave
+import base64
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
@@ -19,6 +24,25 @@ HF_BASE = f"https://huggingface.co/{HF_REPO}/resolve/main"
 IMG_SIZE = 64
 NUM_CLASSES = 4
 CLASSES = ["Closed_Eyes", "Open_Eyes", "No_yawn", "Yawn"]
+
+# Drowsy classes that trigger alarm
+DROWSY_CLASSES = {0, 3}  # Closed_Eyes, Yawn
+
+
+def _generate_beep(freq=800, duration=0.25, sample_rate=22050):
+    buf = io.BytesIO()
+    w = wave.open(buf, 'wb')
+    w.setnchannels(1)
+    w.setsampwidth(2)
+    w.setframerate(sample_rate)
+    for i in range(int(sample_rate * duration)):
+        val = int(16000 * math.sin(2 * math.pi * freq * i / sample_rate))
+        w.writeframes(struct.pack('<h', val))
+    w.close()
+    return base64.b64encode(buf.getvalue()).decode()
+
+
+BEEP_BASE64 = _generate_beep()
 
 
 def load_data():
@@ -148,3 +172,76 @@ def find_last_conv_layer(model):
 
 def predict_model(model, x):
     return model.predict(x, verbose=0)
+
+
+# ---------------------------------------------------------------------------
+# Audio alarm
+# ---------------------------------------------------------------------------
+def alarm_html():
+    """Returns HTML with autoplay beep for drowsy detection."""
+    return f'<audio autoplay src="data:audio/wav;base64,{BEEP_BASE64}">'
+
+
+def is_drowsy(pred_class):
+    return pred_class in DROWSY_CLASSES
+
+
+# ---------------------------------------------------------------------------
+# Real-time video processor (streamlit-webrtc)
+# ---------------------------------------------------------------------------
+_MODEL_LOCK = None
+_PREDICTOR = None
+
+
+def _init_predictor():
+    global _PREDICTOR
+    if _PREDICTOR is None:
+        import threading
+        global _MODEL_LOCK
+        _MODEL_LOCK = threading.Lock()
+        with _MODEL_LOCK:
+            m = load_model()
+            if m is not None:
+                _PREDICTOR = m
+    return _PREDICTOR
+
+
+def process_frame(frame):
+    try:
+        import av
+    except ImportError:
+        return frame
+
+    model = _init_predictor()
+    if model is None:
+        return frame
+
+    img = frame.to_ndarray(format="bgr24")
+    h, w = img.shape[:2]
+
+    pil_img = Image.fromarray(img[:, :, ::-1])
+    scale = IMG_SIZE / max(h, w)
+    new_w, new_h = int(w * scale), int(h * scale)
+    resized = pil_img.resize((new_w, new_h), Image.LANCZOS)
+    canvas = Image.new("RGB", (IMG_SIZE, IMG_SIZE), (0, 0, 0))
+    x_off = (IMG_SIZE - new_w) // 2
+    y_off = (IMG_SIZE - new_h) // 2
+    canvas.paste(resized, (x_off, y_off))
+
+    arr = np.array(canvas, dtype=np.float32) / 255.0
+    x_input = preprocess_input(arr[np.newaxis, ...] * 255.0)
+    preds = predict_model(model, x_input)
+    cls_idx = int(np.argmax(preds[0]))
+    conf = float(np.max(preds[0]))
+    label = f"{CLASSES[cls_idx]}: {conf:.2f}"
+    drowsy = is_drowsy(cls_idx)
+
+    from PIL import ImageDraw
+    draw = ImageDraw.Draw(pil_img)
+    color = (255, 0, 0) if drowsy else (0, 255, 0)
+    draw.text((10, 30), label, fill=color)
+    if drowsy:
+        draw.text((10, 70), "DROWSY!", fill=(255, 0, 0))
+
+    out = np.array(pil_img)[:, :, ::-1]
+    return av.VideoFrame.from_ndarray(out, format="bgr24")
