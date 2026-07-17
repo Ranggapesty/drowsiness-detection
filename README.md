@@ -120,13 +120,31 @@ conda activate drowsiness
 pip install -r requirements.txt
 ```
 
-### 2. Run Streamlit App
+### 3. Run Streamlit App
 
 ```bash
 streamlit run app/app.py
 ```
 
-### 3. (Opsional) Training Ulang
+### 4. Real-time Camera (Local Only)
+
+Mode **Real-time (WebRTC)** membutuhkan dependencies tambahan yang tidak tersedia di Streamlit Cloud:
+
+```bash
+conda activate drowsiness
+pip install av==14.0.0
+pip install streamlit-webrtc --no-deps
+pip install aioice aiortc opencv-python==4.8.1.78
+```
+
+> **Catatan:** SSL error (`ssl.SSLError`) bisa diatasi dengan:
+> ```bash
+> copy sitecustomize.py D:\conda_envs\drowsiness\lib\site-packages\
+> ```
+
+Setelah itu jalankan `streamlit run app/app.py`, buka `http://localhost:8501`, pilih tab **Model Demo** → **Real-time (WebRTC)**, dan izinkan akses kamera.
+
+### 5. (Opsional) Training Ulang
 
 ```bash
 python tahap_4_Modeling/04_Modeling_Training.py
